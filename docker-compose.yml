@@ -1,0 +1,43 @@
+# docker-compose.yml
+version: '3.7'
+
+services:
+
+  mongo:
+     restart: always
+     tty: true
+     image: mongo:latest
+     expose:
+       - "27017"
+  
+  # To run the Airflow Scheduler with a realistic execution model we need to 
+  # have a database available. The user doesn't need access to this DB; but Airflow
+  # will use it to coordinate task execution
+  db: 
+    image: bitnami/postgresql
+    expose:
+      - "5432"
+    env_file:
+      - ./envs/wbb_pgsql.env
+  
+  # Airflow is a python package, the image `dwilson/docker-wbb-airflow:latest` is 
+  # based on very popular `puckel/docker-airsflow:latest` image w. some extra utilities 
+  # installed for our pipeline
+  airflow:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    image: dwilson/docker-wbb-airflow
+    ports:
+      - "8081:8080"
+    volumes:
+      - "./dags/:/usr/local/airflow/dags"
+      - "./plugins/:/usr/local/airflow/plugins"
+      - type: bind
+        source: ./config/airflow.cfg
+        target: /usr/local/airflow/airflow.cfg
+        read_only: true
+      
+    env_file:
+      - ./envs/wbb_airflow.env
+      - ./envs/wbb_fermet_airflow.env

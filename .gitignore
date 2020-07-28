@@ -1,0 +1,5 @@
+.vscode
+__pycache__/
+
+# REMEMBER TO NEVER COMMIT REAL ENV VARS!
+# */*.env
